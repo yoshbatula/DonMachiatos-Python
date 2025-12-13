@@ -9,36 +9,7 @@
 </head>
 
 <body class="min-h-screen bg-[#f1f1f1] text-gray-800 font-sans">
-    <!-- HEADER -->
-    <header class="relative w-full h-44 md:h-48 bg-black text-white overflow-hidden">
-        <!-- subtle vignette/gradient like the reference -->
-        <div class="absolute inset-0 bg-gradient-to-r from-[#0b0b0b] via-black to-[#0b0b0b]"></div>
-        <div class="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent"></div>
-
-        <div class="relative mx-auto max-w-7xl h-full flex items-center justify-between px-10">
-            <!-- LEFT: bigger logo, more breathing room -->
-            <div class="shrink-0">
-                <img src="/core/images/logo don machos.png" alt="Don Machos Logo"
-                    class="w-32 h-32 md:w-36 md:h-36 rounded-full" />
-            </div>
-
-            <!-- CENTER: big title + thin all-caps tagline (centered) -->
-            <div class="flex-1 text-center px-8">
-                <h1 class="text-4xl md:text-5xl font-bold leading-none tracking-tight">
-                    Your Cup of Happiness
-                </h1>
-                <p class="mt-2 text-[10px] md:text-xs text-gray-300 tracking-[0.22em] uppercase">
-                    THE PERFECT CUP, THE PERFECT VIBE. COME EXPERIENCE THE DON MACHOS COMMUNITY.
-                </p>
-            </div>
-
-            <!-- RIGHT: larger cup pushed to edge + slightly lower like the image -->
-            <div class="shrink-0 self-end -mb-10 md:-mb-12">
-                <img src="/core/images/Cup with hand.png" alt="Don Machos Cup" class="w-40 md:w-52 object-contain" />
-            </div>
-        </div>
-    </header>
-
+  <div id="siteHeader"></div>
 
     <!-- MAIN WRAPPER -->
     <main class="mx-auto max-w-6xl px-6 py-6">
@@ -48,7 +19,7 @@
             <!-- SIDEBAR -->
             <aside class="w-48 shrink-0">
                 <div class="bg-white rounded-3xl p-4 shadow-sm text-center">
-                    <h3 class="text-xl font-semibold mb-2">Menu</h3>
+                    <h3 class="text-xl font-extrabold mb-2">Menu</h3>
                     <hr class="border-gray-200 mb-4" />
 
                     <div class="flex flex-col items-center mb-6">
@@ -56,7 +27,7 @@
                             class="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center font-bold text-sm">
                             NEW
                         </div>
-                        <p class="mt-2 text-sm text-gray-700">What's New</p>
+                        <p class="mt-2 text-sm font-medium text-black">What's New</p>
                     </div>
 
                     <!-- Scrollable sidebar list -->
@@ -141,7 +112,7 @@
                             <button type="button" onclick="openProductModal('Caramel Macchiatos')" class="w-full text-left rounded-2xl p-4 flex items-center gap-4 bg-[#F7F7F7]
                                        hover:bg-[#EFEFEF] active:scale-[0.99] transition
                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40">
-                                <img src="/core/images/Caramelmachiatos.svg" alt="Caramel Macchiato"
+                                <img src="/core/images/10 3.png" alt="Caramel Macchiato"
                                     class="w-24 h-24 object-contain shrink-0" />
                                 <div class="flex-1">
                                     <h4 class="text-base font-extrabold leading-snug uppercase">
@@ -166,28 +137,26 @@
         <div class="mt-6 bg-white shadow-lg rounded-3xl px-8 py-7">
             <!-- Top row -->
             <div class="flex items-start justify-between">
-                <h3 class="text-xl font-semibold tracking-wide">YOUR ORDER</h3>
+                <h3 class="text-xl font-extrabold tracking-wide">YOUR ORDER</h3>
 
-                <button class="px-6 py-2.5 rounded-full bg-black text-white text-sm font-semibold shadow" type="button">
+                <button type="button" onclick="window.location.href='/core/TypeOrder/cart.html'"
+                    class="px-6 py-2.5 rounded-full bg-black text-white text-sm font-semibold shadow">
                     VIEW CART
                 </button>
             </div>
 
             <!-- ORDER ITEMS (will be filled by Add to Cart) -->
             <div id="orderItems" class="mt-4 rounded-2xl bg-white border border-gray-100 overflow-hidden">
-                <!-- injected item will appear here -->
-                <div class="px-4 py-6 text-center text-sm text-gray-400">
-                    No items yet
+                <div id="orderItemsList" class="max-h-[140px] overflow-y-auto">
+                    <!-- rows injected here -->
                 </div>
             </div>
 
             <!-- TOTAL text (right side like screenshot) -->
-            <div class="mt-2 flex justify-end text-xs font-semibold text-gray-700">
+            <div class="hidden">
                 <span class="mr-2">TOTAL:</span>
                 <span id="orderTotalText">₱0.00</span>
             </div>
-
-
 
             <!-- Small chevron -->
             <div class="flex justify-center mt-4">
@@ -201,9 +170,11 @@
 
             <!-- Bottom actions -->
             <div class="mt-5 grid grid-cols-3 items-center gap-6">
-                <button class="h-14 rounded-2xl bg-white border border-gray-300 font-semibold shadow-sm" type="button">
+                <button type="button" onclick="clearCart()" class="h-14 rounded-2xl bg-white border border-gray-300 font-semibold shadow-sm
+         hover:bg-black hover:text-white hover:border-black transition">
                     CANCEL
                 </button>
+
 
                 <button id="checkoutBtn"
                     class="h-14 rounded-2xl bg-gray-200 text-gray-400 font-semibold tracking-wide cursor-not-allowed"
@@ -323,16 +294,14 @@
 
             <!-- footer buttons -->
             <div class="mt-6 grid grid-cols-2 gap-4">
-                <button type="button" onclick="closeProductModal()" class="h-12 rounded-2xl bg-white text-black font-extrabold shadow
+                <button type="button" onclick="closeProductModal()" class="h-12 rounded-2xl bg-white text-black font-semibold shadow
          border border-gray-200 transition-all duration-200
          hover:bg-black hover:text-white hover:border-black">
                     Cancel
                 </button>
 
-
-
                 <button type="button" onclick="addToCart()"
-                    class="h-12 rounded-2xl bg-black text-white font-extrabold shadow transition-all duration-200 hover:bg-white hover:text-black hover:border ">
+                    class="h-12 rounded-2xl bg-black text-white font-semibold shadow transition-all duration-200 hover:bg-white hover:text-black hover:border ">
                     Add to Cart
                 </button>
 
@@ -373,8 +342,47 @@
         </div>
     </div>
 
+    <!-- VIEW CART MODAL -->
+    <div id="cartModal" class="fixed inset-0 z-[80] hidden items-center justify-center p-4">
+        <!-- backdrop blur -->
+        <div onclick="closeCartModal()" class="absolute inset-0 bg-black/40 backdrop-blur-md"></div>
+
+        <!-- modal card -->
+        <div class="relative w-full max-w-4xl rounded-3xl bg-white shadow-2xl overflow-hidden">
+            <!-- header -->
+            <div class="flex items-center justify-between px-8 py-6 border-b">
+                <h3 class="text-xl font-extrabold tracking-wide">YOUR ORDER</h3>
+
+                <button type="button" onclick="closeCartModal()"
+                    class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 font-black">
+                    ✕
+                </button>
+            </div>
+
+            <!-- body (scrollable list) -->
+            <div class="px-8 py-6 max-h-[60vh] overflow-y-auto">
+                <div id="cartItems" class="rounded-2xl border border-gray-100 overflow-hidden bg-white">
+                    <!-- injected items from #orderItems -->
+                </div>
+            </div>
+
+            <!-- footer -->
+            <div class="px-8 py-6 border-t flex items-center justify-between">
+                <div class="text-lg font-extrabold">
+                    Total: <span id="cartTotalText">₱0.00</span>
+                </div>
+
+                <button id="cartCheckoutBtn" type="button" class="h-12 px-8 rounded-2xl bg-black text-white font-semibold shadow
+               transition-all duration-200 hover:bg-white hover:text-black hover:border hover:border-black">
+                    PROCEED TO CHECKOUT
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="/core/Modal_JS/ProductModal.js"></script>
+      <script src="/core/js/include-header.js"></script>
+
 
 
 </body>

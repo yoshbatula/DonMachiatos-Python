@@ -1,26 +1,42 @@
 console.log("✅ ProductModal.js loaded");
 window.addToCart = addToCart;
 
+console.log("✅ ProductModal.js loaded");
 
-// state
+// state (MUST exist)
 let quantity = 1;
 let mood = "cold";
 let size = "M";
 let sugar = "50%";
 
-// change these prices if needed
+// prices (MUST exist)
 const sizePrices = { S: 39, M: 69, L: 99 };
 
-function openProductModal(name, imageSrc, description) {
-  document.getElementById("modalTitle").textContent = name.toUpperCase();
-  document.getElementById("modalDesc").textContent = description;
-  document.getElementById("modalImage").src = imageSrc;
+let editingId = null;
 
-  // reset state
-  quantity = 1;
-  mood = "cold";
-  size = "M";
-  sugar = "50%";
+function openProductModal(name, imgSrc, desc, editItem = null) {
+  // if editing, keep the cart item's id
+  editingId = editItem ? editItem.id : null;
+
+  document.getElementById("modalTitle").textContent = (name || "ITEM").toUpperCase();
+  document.getElementById("modalImage").setAttribute("src", imgSrc || "/core/images/Caramelmachiatos.svg");
+
+  // show description (supports <br>)
+  document.getElementById("modalDesc").innerHTML =
+    (desc || "").replace(/\n/g, "<br>");
+
+  // reset or load state
+  if (editItem) {
+    quantity = editItem.qty;
+    mood = editItem.mood;
+    size = editItem.size;
+    sugar = editItem.sugar;
+  } else {
+    quantity = 1;
+    mood = "cold";
+    size = "M";
+    sugar = "50%";
+  }
 
   document.getElementById("qty").textContent = quantity;
   document.getElementById("modalPrice").textContent = "₱" + sizePrices[size];
@@ -33,6 +49,7 @@ function openProductModal(name, imageSrc, description) {
   modal.classList.remove("hidden");
   modal.classList.add("flex");
 }
+
 
 
 function closeProductModal() {
@@ -84,63 +101,290 @@ function paintSugar() {
   setActive(document.getElementById("sugar50"), sugar === "50%");
   setActive(document.getElementById("sugar75"), sugar === "75%");
 }
+// CART STORAGE
+
+// each item: { id, name, imgSrc, desc, mood, size, sugar, qty, price }
+
 
 function addToCart() {
-  const productName = document.getElementById("modalTitle").textContent.trim();
+  const name = document.getElementById("modalTitle").textContent.trim();
   const imgSrc = document.getElementById("modalImage").getAttribute("src");
+  const desc = document.getElementById("modalDesc").textContent.trim();
 
-  const sizeText = size === "S" ? "Small" : size === "M" ? "Medium" : "Large";
-  const moodText = mood === "hot" ? "Hot" : "Iced";
-  const subtitle = `${sizeText} | ${moodText} | ${sugar}`;
+  const price = sizePrices[size];
 
-  const pricePerItem = sizePrices[size];
-  const lineTotal = pricePerItem * quantity;
+  // If editing, update that exact line item (do not merge)
+  if (editingId) {
+  const item = cart.find(i => i.id === editingId);
+  if (item) {
+    item.mood = mood;
+    item.size = size;
+    item.sugar = sugar;
+    item.qty = quantity;
+    item.price = price;
+  }
 
-  const orderItems = document.getElementById("orderItems");
-  orderItems.innerHTML = `
-  <div class="flex items-center justify-between px-6 py-5 bg-white border-b">
+  editingId = null;
+  saveCart();       // ✅ add this
+  renderCart();
+  closeProductModal();
+  return;
+}
 
-    <!-- LEFT -->
-    <div class="flex items-center gap-5">
-      <!-- Image -->
-      <div class="w-20 h-20 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
-        <img src="${imgSrc}" class="w-16 h-16 object-contain" alt="${productName}">
+
+  // If adding new: merge same options
+  const key = `${name}|${mood}|${size}|${sugar}`;
+  const existing = cart.find(item => item.id === key);
+
+  if (existing) existing.qty += quantity;
+  else {
+    cart.push({
+      id: key,
+      name,
+      imgSrc,
+      desc,
+      mood,
+      size,
+      sugar,
+      qty: quantity,
+      price
+    });
+  }
+
+  renderCart();
+  saveCart();
+renderCart();
+closeProductModal();
+}
+
+
+function renderCart() {
+  const orderItemsList = document.getElementById("orderItemsList");
+
+  if (!cart.length) {
+    orderItems.innerHTML = `
+      <div class="px-4 py-6 text-center text-sm text-gray-400">
+        No items yet
+      </div>
+    `;
+    updateTotals(0);
+    return;
+  }
+
+  // build list
+
+orderItemsList.innerHTML = cart.map(item => {
+  const sizeText = item.size === "S" ? "Small" : item.size === "M" ? "Medium" : "Large";
+  const moodText = item.mood === "hot" ? "Hot" : "Iced";
+  const subtitle = `${sizeText} | ${moodText} | ${item.sugar}`;
+  const lineTotal = item.price * item.qty;
+
+  return `
+    <div class="flex items-center justify-between px-8 py-6 bg-white border-b border-gray-100">
+      
+      <!-- LEFT -->
+      <div class="flex items-center gap-6 min-w-0">
+        <div class="w-20 h-20 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
+          <img src="${item.imgSrc}" class="w-16 h-16 object-contain" alt="${item.name}">
+        </div>
+
+        <div class="min-w-0">
+          <div class="text-lg font-extrabold uppercase truncate">
+            ${item.name}
+          </div>
+
+          <div class="text-sm text-amber-950 font-semibold truncate">
+            ${subtitle}
+          </div>
+
+          <div class="mt-2 text-base font-extrabold">
+            x${item.qty}
+          </div>
+        </div>
       </div>
 
-      <!-- Info -->
-      <div class="leading-tight">
-        <div class="text-base font-extrabold uppercase">
-          ${productName}
-        </div>
-
-        <div class="mt-1 text-xs text-gray-400">
-          ${subtitle}
-        </div>
-
-        <div class="mt-2 text-sm font-bold">
-          x${quantity}
-        </div>
+      <!-- RIGHT -->
+      <div class="text-base font-extrabold text-gray-900 whitespace-nowrap self-end">
+        ₱${lineTotal.toFixed(2)}
       </div>
+
     </div>
+  `;
+}).join("");
 
-    <!-- RIGHT -->
-    <div class="text-sm font-extrabold text-gray-800 whitespace-nowrap">
-      TOTAL: ₱${lineTotal.toFixed(2)}
-    </div>
+  // compute grand total
+  const grandTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  updateTotals(grandTotal);
 
-  </div>
-`;
-
-
-  document.getElementById("orderTotalText").textContent = `₱${lineTotal.toFixed(2)}`;
-  document.getElementById("orderTotalBox").textContent = `₱${lineTotal.toFixed(2)}`;
-
+  // enable checkout button
   const checkoutBtn = document.getElementById("checkoutBtn");
   checkoutBtn.disabled = false;
   checkoutBtn.className =
     "h-14 rounded-2xl bg-black text-white font-semibold tracking-wide shadow transition-all duration-200 hover:bg-white hover:text-black hover:border hover:border-black";
-
-  closeProductModal();
 }
 
+
+
+function openCartModal() {
+  renderCartModal();
+
+  const modal = document.getElementById("cartModal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+}
+function closeCartModal() {
+  const modal = document.getElementById("cartModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+}
+
+
+function renderCartModal() {
+  const cartItems = document.getElementById("cartItems");
+
+  if (!cart.length) {
+    cartItems.innerHTML = `
+      <div class="px-4 py-6 text-center text-sm text-gray-400">
+        No items yet
+      </div>
+    `;
+    document.getElementById("cartTotalText").textContent = "₱0.00";
+    return;
+  }
+
+  cartItems.innerHTML = cart.map(item => {
+    const sizeText = item.size === "S" ? "Small" : item.size === "M" ? "Medium" : "Large";
+    const moodText = item.mood === "hot" ? "Hot" : "Iced";
+    const subtitle = `${sizeText} | ${moodText} | ${item.sugar}`;
+    const lineTotal = item.price * item.qty;
+
+    return `
+      <div class="flex items-center justify-between px-6 py-5 bg-white border-b">
+        <div class="flex items-center gap-5">
+          <div class="w-20 h-20 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden">
+            <img src="${item.imgSrc}" class="w-16 h-16 object-contain" alt="${item.name}">
+          </div>
+
+          <div class="leading-tight">
+            <div class="text-lg font-extrabold uppercase">${item.name}</div>
+            <div class="mt-1 text-sm text-amber-950 font-semibold">${subtitle}</div>
+            <div class="mt-2 text-base font-extrabold">x${item.qty}</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="text-base font-extrabold text-gray-800 whitespace-nowrap">
+            ₱${lineTotal.toFixed(2)}
+          </div>
+
+          <button
+            type="button"
+            onclick="editCartItem('${item.id}')"
+            class="h-10 px-4 rounded-xl bg-gray-100 font-semibold hover:bg-gray-200"
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            onclick="removeCartItem('${item.id}')"
+            class="h-10 px-4 rounded-xl bg-black text-white font-semibold
+                   hover:bg-white hover:text-black hover:border hover:border-black"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  document.getElementById("cartTotalText").textContent = `₱${total.toFixed(2)}`;
+}
+
+function updateTotals(total) {
+  document.getElementById("orderTotalText").textContent = `₱${total.toFixed(2)}`;
+  document.getElementById("orderTotalBox").textContent = `₱${total.toFixed(2)}`;
+}
+
+function removeCartItem(id) {
+  cart = cart.filter(item => item.id !== id);
+  saveCart();        // ✅ add this
+  renderCart();
+}
+
+function editCartItem(id) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+
+  // close cart modal so the product modal is visible
+  closeCartModal();
+
+  openProductModal(item.name, item.imgSrc, item.desc, item);
+}
+
+function clearCart() {
+  cart = [];
+  saveCart();
+  renderCart();
+
+  // reset checkout button
+  const checkoutBtn = document.getElementById("checkoutBtn");
+  checkoutBtn.disabled = true;
+  checkoutBtn.className =
+    "h-14 rounded-2xl bg-gray-200 text-gray-400 font-semibold tracking-wide cursor-not-allowed";
+
+  // close cart modal if open
+  closeCartModal?.();
+}
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+
+function saveCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+
+function loadCart() {
+  try {
+    cart = JSON.parse(localStorage.getItem("donmachos_cart")) || [];
+  } catch (e) {
+    cart = [];
+  }
+}
+
+function goToCartPage() {
+  // make sure latest cart is saved
+  saveCart();
+  window.location.href = "/core/TypeOrder/Cart.html"; // change path if needed
+}
+
+window.addEventListener("load", () => {
+  const editItemRaw = localStorage.getItem("editItem");
+  if (!editItemRaw) return;
+
+  const item = JSON.parse(editItemRaw);
+
+  // open modal with item values
+  openProductModal(item.name, item.imgSrc, item.desc, item);
+
+  // remove it so it won’t reopen again after refresh
+  localStorage.removeItem("editItem");
+});
+
+
+
+// expose functions for inline onclick="..."
+window.openProductModal = openProductModal;
+window.closeProductModal = closeProductModal;
+window.changeQty = changeQty;
+window.setMood = setMood;
+window.setSize = setSize;
+window.setSugar = setSugar;
+window.addToCart = addToCart;
+
+window.openCartModal = openCartModal;
+window.closeCartModal = closeCartModal;
+window.editCartItem = editCartItem;
+window.removeCartItem = removeCartItem;
 
